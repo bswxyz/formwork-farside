@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>FARSIDE — Guide · One canvas, three storms</title>
+<meta name="description" content="How the FARSIDE site was built with Formwork: one canvas particle engine that interpolates between three weather regimes, an SVG tent-configuration morph, and three accessible interactive patterns." />
+<meta name="theme-color" content="#0A0D0C" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Chivo:wght@400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+<style>
+  :root{--bg:#0A0D0C;--panel:#121715;--ink:#EAF0E8;--dim:#93A096;--faint:#5C6862;
+    --accent:#FF5A1F;--flare:#FF8A50;--line:rgba(234,240,232,.10)}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--ink);font-family:"Chivo",system-ui,sans-serif;font-weight:400;
+    line-height:1.66;-webkit-font-smoothing:antialiased}
+  a{color:var(--accent);text-decoration:none}a:hover{text-decoration:underline}
+  ::selection{background:var(--accent);color:#0A0D0C}
+  .wrap{max-width:760px;margin:0 auto;padding:clamp(28px,6vw,80px) clamp(20px,5vw,32px)}
+  .top{display:flex;justify-content:space-between;align-items:center;font-family:"Space Mono",monospace;
+    font-size:.74rem;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);margin-bottom:clamp(40px,8vh,90px)}
+  .top a{color:var(--dim)}
+  .brand{font-family:"Anton",sans-serif;font-weight:400;letter-spacing:.05em;color:var(--ink);font-size:1.05rem}
+  .tag{display:inline-block;font-family:"Space Mono",monospace;font-size:.72rem;font-weight:700;
+    letter-spacing:.16em;text-transform:uppercase;color:var(--accent);margin-bottom:1.4rem}
+  h1{font-family:"Anton",sans-serif;font-weight:400;text-transform:uppercase;
+    font-size:clamp(2.4rem,7.5vw,4.2rem);line-height:.98;letter-spacing:.01em;margin-bottom:1.2rem}
+  h1 em{font-style:normal;color:var(--accent)}
+  .lede{font-size:clamp(1.08rem,2.2vw,1.32rem);color:var(--dim);max-width:58ch;margin-bottom:3.4rem}
+  h2{font-family:"Anton",sans-serif;font-weight:400;text-transform:uppercase;letter-spacing:.01em;
+    font-size:clamp(1.5rem,4vw,2.1rem);margin:3rem 0 1rem}
+  h3{font-family:"Space Mono",monospace;font-size:.86rem;font-weight:700;letter-spacing:.08em;
+    text-transform:uppercase;color:var(--flare);margin:1.8rem 0 .6rem}
+  p{color:var(--dim);margin:0 0 1.1rem;max-width:64ch}
+  strong{color:var(--ink);font-weight:500}
+  ul{color:var(--dim);margin:0 0 1.2rem 1.2rem}li{margin:.4rem 0}
+  code{font-family:"Space Mono",monospace;font-size:.86em;background:rgba(255,255,255,.06);
+    padding:.12em .4em;border-radius:2px;color:var(--ink)}
+  pre{background:var(--panel);border:1px solid var(--line);border-radius:3px;padding:18px 20px;
+    overflow-x:auto;margin:0 0 1.4rem;font-size:.8rem;line-height:1.62;font-family:"Space Mono",monospace}
+  pre code{background:none;padding:0;color:var(--dim)}
+  .stack{list-style:none;margin:0 0 1.2rem;padding:0}
+  .stack li{display:flex;gap:14px;padding:12px 0;border-bottom:1px solid var(--line)}
+  .stack b{color:var(--ink);font-weight:500;min-width:128px}
+  .rule{height:1px;background:var(--line);margin:3rem 0}
+  .grid-ref{color:var(--faint);font-family:"Space Mono",monospace;letter-spacing:.1em}
+  footer{margin-top:4rem;padding-top:2rem;border-top:1px solid var(--line);font-family:"Space Mono",monospace;
+    font-size:.76rem;color:var(--faint);line-height:1.9}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top"><a class="brand" href="../">FARSIDE</a><a href="../">&larr; Back to site</a></div>
+  <span class="tag">Build guide &middot; Site 27 of 27</span>
+  <h1>One canvas,<br><em>three storms.</em></h1>
+  <p class="lede">FARSIDE is the last of 27 sites built by Formwork. Its hero is a single particle field that
+    doesn't switch between weather effects &mdash; it <strong>interpolates</strong> between them, so pressing a
+    terrain toggle re-tunes the storm, the photograph, and a line-drawn tent all at once.</p>
+
+  <h2>The idea</h2>
+  <p>Expedition gear pages usually show you a hero photo and a spec sheet. FARSIDE tries to make the spec
+    sheet <strong>reactive</strong>: one control &mdash; the terrain segmented control &mdash; is the spine of the whole
+    page. Move it and three things answer in lockstep: the weather over the ridge, the environment photo,
+    and an SVG diagram of how the shelter is actually pitched for that ground. The mood is a field manual
+    crossed with safety gear: Anton caps, Space Mono coordinates, one signal-orange accent, cut-tarp edges.</p>
+
+  <h2>The stack</h2>
+  <ul class="stack">
+    <li><b>Weather engine</b> A single 2D <code>&lt;canvas&gt;</code> particle field, delta-timed and DPR-capped.</li>
+    <li><b>Diagram</b> Inline SVG, three tent configs redrawn with <code>stroke-dashoffset</code>.</li>
+    <li><b>Controls</b> A real <code>tablist</code> segmented control and a keyboard stepper &mdash; no framework.</li>
+    <li><b>Type</b> Anton (display caps) + Chivo (body) + Space Mono (eyebrows, coords, spec).</li>
+    <li><b>Host</b> Static files on GitHub Pages &mdash; relative paths, no build step.</li>
+  </ul>
+
+  <h2>Signature technique: the weather engine</h2>
+  <p>Each regime is a small bag of numbers &mdash; colour, speed, wind angle, streak length, turbulence,
+    density. The trick is that the live state is never <em>set</em> to a regime; it is <strong>lerped toward</strong>
+    one. Every frame the current state eases a little further from where it was to where it's going, over
+    about 800&nbsp;ms, so snow slows and warms into dust instead of cutting to it:</p>
+  <pre><code>const REGIMES = {
+  alpine:  { color:[236,240,236], speed:46,  angle:1.94, streak:5,  turb:1.1  },
+  desert:  { color:[226,178,122], speed:20,  angle:0.24, streak:0,  turb:0.6  },
+  coastal: { color:[176,206,216], speed:168, angle:2.16, streak:20, turb:0.28 },
+};
+
+// on toggle: snapshot where we are, aim at the new regime, restart the fade
+function setRegime(name){ from = cur; to = REGIMES[name]; tt = 0; }
+
+// every frame: ease the whole parameter bag from → to
+if (tt &lt; 1){ tt = Math.min(1, tt + dt/0.8); cur = mixState(from, to, easeIO(tt)); }</code></pre>
+  <p>Particles read from <code>cur</code>, so one pool of ~260 dots becomes snow streaks, floating dust motes,
+    or driven rain depending on where the fade is. <strong>Streak length</strong> drives the look: above 1 the
+    particle is drawn as a line back along its velocity (rain, snow); at 0 it's a soft dot (dust). Coastal
+    adds a periodic <strong>gust envelope</strong> that briefly surges speed and density; desert adds warm
+    horizontal <strong>heat-shimmer bands</strong> behind the motes. The pointer nudges the wind vector. It's
+    delta-timed so speed is frame-rate independent, capped at <code>devicePixelRatio&nbsp;2</code>, and paused by an
+    <code>IntersectionObserver</code> the moment the hero leaves the screen.</p>
+
+  <h3>The SVG configuration morph</h3>
+  <p>The tent diagram is three <code>&lt;g&gt;</code> groups in one SVG. Every path carries
+    <code>pathLength="1"</code>, so a single CSS rule can draw any line regardless of its real length. Switching
+    terrain removes the active class from all groups, forces a reflow, then adds it to the new one so the
+    <code>stroke-dashoffset</code> transition replays from scratch &mdash; the tent redraws itself:</p>
+  <pre><code>.js .tent-svg path        { stroke-dasharray:1; stroke-dashoffset:1 }
+.js .tent-config.is-active path { stroke-dashoffset:0;
+  transition:stroke-dashoffset .7s var(--ease) }</code></pre>
+  <pre><code>configs.forEach(c =&gt; c.classList.remove('is-active'));
+void g.getBoundingClientRect();   // force reflow → transition restarts
+g.classList.add('is-active');     // members, then highlights, then callouts</code></pre>
+  <p>Staggered <code>transition-delay</code>s draw the structural poles first, then the orange-highlighted
+    reinforcements (storm guys, shade spar, storm skirt), then the mono callouts fade in last.</p>
+
+  <h2>The interactive patterns</h2>
+  <p>Three controls carry the page, each grounded in a shipped product pattern:</p>
+
+  <h3>Segmented control &rarr; Webflow / Amplemarket</h3>
+  <p>A real <code>role="tablist"</code> with a machined pill and a sliding thumb (a CSS
+    <code>transform:translateX(calc(var(--seg-i) * 100%))</code>). It uses <strong>roving tabindex</strong> and arrow
+    keys, and selection follows focus &mdash; the Webflow-pricing / Amplemarket move where one tab swaps the whole
+    panel below it. Here that panel is the photo, the diagram and the spec list, all at once.</p>
+
+  <h3>Numbered rail &rarr; Sequence / Fourmula AI</h3>
+  <p>Big Anton numerals 01&ndash;06 on a rail, the active one signal-orange with a hatch underline, done steps
+    dimmed. It <strong>auto-advances every 6&nbsp;s</strong> behind a thin delta-timed progress bar that pauses on
+    hover, focus, offscreen or reduced-motion &mdash; and any step is one click or arrow-key away, carrying
+    <code>aria-current="step"</code>. It's the Sequence stepper crossed with Fourmula's oversized numbers.</p>
+
+  <h3>Tier cards &rarr; Grok products</h3>
+  <p>Flat, hairline-divided cards &mdash; one photo, mono model number, a short line, a mono spec table and a
+    single CTA each. The middle card carries an <code>EXPEDITION PICK</code> flag and a thin signal top rule.
+    Dark, quiet, one accent: the Grok-products pattern.</p>
+
+  <h2>Details that matter</h2>
+  <ul>
+    <li><strong>JS-off is whole</strong> &mdash; the first terrain config and <em>all six</em> pitch steps render from
+      HTML/CSS; a <code>.js</code> class is what collapses the stack into interactive controls.</li>
+    <li><strong>Scramble, not everywhere</strong> &mdash; eyebrows, stat values and spec readouts scramble from random
+      glyphs to final text (a weather-radio static feel). Never body copy.</li>
+    <li><strong>Reduced motion</strong> &mdash; the canvas paints one static scatter, text renders final, and every
+      toggle swaps instantly with no crossfade.</li>
+    <li><strong>Cut-tarp edges</strong> &mdash; a 1.2&deg; <code>clip-path</code> on alternating sections, with a sliver of
+      safety-tape hatch in one corner. Used sparingly on purpose.</li>
+    <li><strong>Performance</strong> &mdash; DPR capped at 2, delta-timed motion, and every animation loop stops when
+      its section is off screen.</li>
+  </ul>
+
+  <div class="rule"></div>
+  <p><span class="grid-ref">[ 90.00&deg;S / 0.00&deg;E ]</span> &mdash; one particle pool, three regimes, and a tent that
+    redraws itself. The weather isn't waiting.</p>
+  <footer>Designed &amp; built by <strong>Formwork</strong> &middot; Site 27 of 27 &middot;
+    <a href="../">Return to FARSIDE &rarr;</a> &middot; <a href="https://bswxyz.github.io/formwork/">The full collection &rarr;</a></footer>
+</div>
+</body>
+</html>
